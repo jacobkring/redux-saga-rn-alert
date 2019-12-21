@@ -1,5 +1,8 @@
 
 import { Alert } from 'react-native';
+import { confirmAlert } from 'react-confirm-alert'
+import 'react-confirm-alert/src/react-confirm-alert.css'
+
 import { channel } from 'redux-saga';
 import { take, put, call } from 'redux-saga/effects';
 
@@ -9,6 +12,8 @@ import {ACTION_SHOW_ALERT, ACTION_PUT, ACTION_CALL} from '../actions';
 
 let _alertIsRunning = false
   , _preventNestedAlerts = true;
+
+const platform = typeof navigator != 'undefined' && navigator.product == 'ReactNative' ? 'react-native' : 'react'
 
 export function * watchAlertChannel() {
   while (true) {
@@ -22,7 +27,12 @@ export function * watchAlertChannel() {
                 if(_alertIsRunning && _preventNestedAlerts) break; // prevent nested alerts
                 _alertIsRunning = true;
 
-                Alert.alert(title, message, buttons, options)
+                if (platform === 'react-native') {
+                    Alert.alert(title, message, buttons, options)
+                } else if (platform === 'react') {
+                    console.log(title, message, buttons, options)
+                }
+
                 break;
 
             case ACTION_PUT:
@@ -52,8 +62,10 @@ export function * alert(title, message, buttons = [], options ) {
     const _buttons = buttons.map( b => {
         return {
             text: b.text,
+            label: b.text,
             style: b.hasOwnProperty('style')? b.style : 'default',
-            onPress: _createAction(b)
+            onPress: _createAction(b),
+            onClick: _createAction(b)
         }
     });
 
